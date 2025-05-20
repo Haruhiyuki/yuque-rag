@@ -57,7 +57,7 @@ Token获取请参考[官方文档](https://www.yuque.com/yuque/developer/api#sAV
 ```python
 # 语雀团队名，如果YUQUE_NAMESPACE为空将获取整个团队的知识库。
 YUQUE_GROUP = "Your-Group"
-#知识库的名称，格式为“团队名/知识库名”，填写后只会获取单一知识库。
+# 知识库的名称，格式为“团队名/知识库名”，填写后只会获取单一知识库。
 YUQUE_NAMESPACE = None          
 
 # 开启问答模式，在存在索引的情况下避免重建。若要更新知识库索引及文本，请关闭该模式。
@@ -86,6 +86,7 @@ python app.py
 ```
 
 首次运行将进行：
+- 模型下载（若耗时较久可打开代理）
 
 - 语雀知识库加载
 

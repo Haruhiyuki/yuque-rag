@@ -1,5 +1,4 @@
 BCEmbedding==0.1.5
-BCEmbedding==0.1.5
 faiss_cpu==1.11.0
 fastapi==0.115.12
 langchain==0.3.25
