@@ -6,8 +6,6 @@
 
 ## ✨ 功能
 
----
-
 - 📥 自动加载语雀团队或知识库内容
 - 🧹 文档切分、清洗与向量化
 - 🔍 两阶段检索（向量 + 重排序）
@@ -16,8 +14,6 @@
 - 🔌 数据持久化
 
 ## 🗂️ 项目结构
-
----
 
 ```bash
 yuque_rag_project/
@@ -41,8 +37,6 @@ yuque_rag_project/
 ```
 
 ## 🚀 快速开始
-
----
 
 ### 1️⃣ 安装依赖
 
@@ -98,8 +92,6 @@ python app.py
 
 ## 🌐 FastAPI 服务
 
----
-
 运行：
 ```bash
 uvicorn server:app --reload
@@ -120,8 +112,6 @@ uvicorn server:app --reload
 
 ## 🧪 调试页面
 
----
-
 ```bash
 streamlit run test_webui.py
 ```
@@ -133,8 +123,6 @@ streamlit run test_webui.py
 - 输出 prompt 与回答
 
 ## 🧠 模型说明
-
----
 
 ### 📌 嵌入模型：
 `maidalun1020/bce-embedding-base_v1`
@@ -155,5 +143,3 @@ streamlit run test_webui.py
 ## 📜 License
 
 本项目采用[Apache 2.0 License](https://github.com/netease-youdao/BCEmbedding/blob/master/LICENSE)
-
----
