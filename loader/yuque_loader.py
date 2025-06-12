@@ -11,59 +11,66 @@ class YuqueLoader:
         self.base_url = "https://www.yuque.com/api/v2"
         self.headers = {
             "X-Auth-Token": self.token,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
-    def get_repos(self, group_login: str) -> List[dict]:
-        """获取某个团队下的所有知识库"""
-        url = f"{self.base_url}/groups/{group_login}/repos"
-        resp = requests.get(url, headers=self.headers)
+
+    # ---------- 基础 API ---------- #
+    def _get(self, url: str) -> dict:
+        resp = requests.get(url, headers=self.headers, timeout=20)
         resp.raise_for_status()
         return resp.json().get("data", [])
 
-    def get_docs_list(self, namespace: str) -> List[dict]:
-        """获取某个知识库下的所有文档元数据"""
-        url = f"{self.base_url}/repos/{namespace}/docs"
-        resp = requests.get(url, headers=self.headers)
-        resp.raise_for_status()
-        return resp.json().get("data", [])
+    def get_repos(self, group_login: str):
+        return self._get(f"{self.base_url}/groups/{group_login}/repos")
+
+    def get_docs_list(self, namespace: str):
+        return self._get(f"{self.base_url}/repos/{namespace}/docs")
 
     def get_doc_content(self, namespace: str, slug: str) -> str:
-        """获取指定文档内容（Markdown格式）"""
         url = f"{self.base_url}/repos/{namespace}/docs/{slug}"
-        resp = requests.get(url, headers=self.headers)
+        resp = requests.get(url, headers=self.headers, timeout=20)
         resp.raise_for_status()
-        return resp.json().get("data", {}).get("body", "")
+        return resp.json()["data"]["body"]  # markdown / html
 
-    def load_documents(self,
-                       group_login: Optional[str] = None,
-                       namespace: Optional[str] = None) -> List[Document]:
+    # ---------- 总入口 ---------- #
+    def load_documents(
+        self,
+        *,
+        group_login: Optional[str] = None,
+        namespace: Optional[str] = None,
+    ) -> List[Document]:
         """
-        支持两种加载方式：
-        - 传 group_login → 获取该团队下所有知识库和所有文档
-        - 传 namespace → 获取该知识库下的所有文档
+        · group_login → 加载该团队下所有 repo
+        · namespace   → 仅加载单一 repo
         """
-        documents = []
+        if not (group_login or namespace):
+            raise ValueError("必须提供 group_login 或 namespace 其中之一")
+
+        documents: List[Document] = []
+
+        def _collect(ns: str):
+            for meta in self.get_docs_list(ns):
+                slug = meta["slug"]
+                content = self.get_doc_content(ns, slug)
+
+                metadata = {
+                    "repo": ns,
+                    "doc_id": meta["id"],
+                    "title": meta["title"],
+                    "author_name": meta.get("user", {}).get("name", ""),
+                    "created_at": meta["created_at"],
+                }
+
+                documents.append(Document(page_content=content, metadata=metadata))
+
         if namespace:
             print(f"读取指定知识库：{namespace}")
-            docs_meta = self.get_docs_list(namespace)
-            for doc in docs_meta:
-                content = self.get_doc_content(namespace, doc.get("slug"))
-                title = doc.get("title", "")
-                documents.append(Document(page_content=f"{title}\n{content}", metadata={"repo": namespace, "doc_id": doc.get("id")}))
-
-        elif group_login:
-            repos = self.get_repos(group_login)
-            for repo in repos:
-                ns = repo.get("namespace")  # e.g. "staff-sqlmik/doc-manual"
+            _collect(namespace)
+        else:  # group_login mode
+            for repo in self.get_repos(group_login):
+                ns = repo["namespace"]
                 print(f"读取知识库：{ns}")
-                docs_meta = self.get_docs_list(ns)
-                for doc in docs_meta:
-                    content = self.get_doc_content(ns, doc.get("slug"))
-                    title = doc.get("title", "")
-                    documents.append(Document(page_content=f"{title}\n{content}", metadata={"repo": ns, "doc_id": doc.get("id")}))
-
-        else:
-            raise ValueError("必须提供 group_login 或 namespace 其中之一")
+                _collect(ns)
 
         return documents
